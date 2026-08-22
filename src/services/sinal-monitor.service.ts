@@ -1,3 +1,4 @@
+import { EventLog } from 'ethers';
 import { sensorService } from './sensor.service';
 import { ManutencaoBocaDeLoboContract } from '../interfaces/contrato.interface';
 import { SensorStatus } from '../enum/status-sensor.enum';
@@ -17,6 +18,8 @@ class SinalMonitor {
 
         this.manutencaoContrato = await contratoService.getContrato();
 
+        await this.sincronizarChamadosExistentes();
+
         if (this.monitoringIntervalId) {
             return;
         }
@@ -24,6 +27,53 @@ class SinalMonitor {
         this.monitoringIntervalId = setInterval(() => {
             this.verificarSinal();
         }, this.checkIntervalMs);
+    }
+
+    private async sincronizarChamadosExistentes(): Promise<void> {
+        for (const sensor of sensorService.getSensores()) {
+            await this.sincronizarChamadoAtivo(sensor);
+        }
+    }
+
+    private async sincronizarChamadoAtivo(sensor: Sensor): Promise<void> {
+        try {
+            const eventos = await this.manutencaoContrato!.queryFilter(
+                'NovoChamado'
+            );
+
+            const ultimoEvento = eventos
+                .filter((evento): evento is EventLog => 'args' in evento)
+                .filter((evento) => Number(evento.args.sensorId) === sensor.id)
+                .pop();
+
+            if (!ultimoEvento) {
+                return;
+            }
+
+            const chamado = await this.manutencaoContrato!.getChamado(
+                ultimoEvento.args.id
+            );
+
+            if (Number(chamado.status) === Status.Concluido) {
+                return;
+            }
+
+            sensor.setIdChamado(Number(chamado.id));
+            sensor.status =
+                Number(chamado.status) === Status.Aberto
+                    ? SensorStatus.Obstruido
+                    : SensorStatus.EmAndamento;
+            sensor.marcarSemSinal();
+
+            console.log(
+                `Chamado #${chamado.id} já existente encontrado para o sensor ${sensor.id}, sincronizando estado.`
+            );
+        } catch (error) {
+            console.error(
+                `Erro ao sincronizar chamado existente do sensor ${sensor.id}:`,
+                error
+            );
+        }
     }
 
     private parar(): void {

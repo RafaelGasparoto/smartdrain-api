@@ -52,4 +52,8 @@ export class Sensor {
     public setIdChamado(idChamado?: number) {
         this.idChamado = idChamado;
     }
+
+    public marcarSemSinal(): void {
+        this.ultimoSinal = 0;
+    }
 }
