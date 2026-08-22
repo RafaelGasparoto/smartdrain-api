@@ -1,43 +1,45 @@
 import { readFileSync } from 'fs';
 import { ethers } from 'ethers';
-import { env } from '../config/env';
+import { ambiente } from '../config/ambiente';
 import { ManutencaoBocaDeLoboContract } from './contrato.interface';
 
 class ContratoService {
-    private contract: ManutencaoBocaDeLoboContract | null = null;
+    private contrato: ManutencaoBocaDeLoboContract | null = null;
 
-    async getContrato(): Promise<ManutencaoBocaDeLoboContract> {
-        if (!this.contract) {
-            this.contract = await this.setupContract();
+    async obterContrato(): Promise<ManutencaoBocaDeLoboContract> {
+        if (!this.contrato) {
+            this.contrato = await this.configurarContrato();
         }
-        return this.contract;
+        return this.contrato;
     }
 
-    private async setupContract(): Promise<ManutencaoBocaDeLoboContract> {
-        const deployedAddresses = JSON.parse(
-            readFileSync(env.deploymentPath, 'utf8')
+    private async configurarContrato(): Promise<ManutencaoBocaDeLoboContract> {
+        const enderecosImplantados = JSON.parse(
+            readFileSync(ambiente.caminhoImplantacao, 'utf8')
         );
-        const contractAddress = deployedAddresses[env.artifactName];
+        const enderecoContrato = enderecosImplantados[ambiente.nomeArtefato];
 
-        const artifact = JSON.parse(readFileSync(env.artifactsPath, 'utf8'));
-        const abi = artifact.abi;
+        const artefato = JSON.parse(
+            readFileSync(ambiente.caminhoArtefatos, 'utf8')
+        );
+        const abi = artefato.abi;
 
-        const provider = new ethers.WebSocketProvider(
-            env.webSocketProviderUrl
+        const provedor = new ethers.WebSocketProvider(
+            ambiente.urlProvedorWebSocket
         );
 
         const contratoConector = new ethers.Contract(
-            contractAddress,
+            enderecoContrato,
             abi,
-            provider
+            provedor
         );
 
-        console.log(`Conectado ao contrato em: ${contractAddress}`);
+        console.log(`Conectado ao contrato em: ${enderecoContrato}`);
 
-        const wallet = new ethers.Wallet(env.privateKey, provider);
+        const carteira = new ethers.Wallet(ambiente.chavePrivada, provedor);
 
         const contrato = contratoConector.connect(
-            wallet
+            carteira
         ) as ManutencaoBocaDeLoboContract;
 
         return contrato;

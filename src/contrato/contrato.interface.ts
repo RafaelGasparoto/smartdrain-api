@@ -15,47 +15,47 @@ interface ManutencaoBocaDeLoboFunctions {
     ): Promise<ContractTransactionResponse>;
     iniciarAtendimento(id: bigint): Promise<ContractTransactionResponse>;
     validarManutencao(id: bigint): Promise<ContractTransactionResponse>;
-    getChamado(id: BigNumberish): Promise<Chamado>;
+    obterChamado(id: BigNumberish): Promise<Chamado>;
     finalizarChamado(id: bigint): Promise<ContractTransactionResponse>;
 
     on(
-        event: 'ChamadoFinalizado',
+        evento: 'ChamadoFinalizado',
         listener: (
             id: bigint,
             dataFechamento: bigint,
-            event: ContractEventPayload
+            evento: ContractEventPayload
         ) => void
     ): this;
 
     on(
-        event: 'ChamadoEmAndamento',
+        evento: 'ChamadoEmAndamento',
         listener: (
             id: bigint,
             tecnico: string,
             dataAtualizacao: bigint,
-            event: ContractEventPayload
+            evento: ContractEventPayload
         ) => void
     ): this;
 
     on(
-        event: 'ChamadoValidarManutencao',
+        evento: 'ChamadoValidarManutencao',
         listener: (
             id: bigint,
             tecnico: string,
             dataAtualizacao: bigint,
-            event: ContractEventPayload
+            evento: ContractEventPayload
         ) => void
     ): this;
 
     on(
-        event: 'NovoChamado',
+        evento: 'NovoChamado',
         listener: (
             id: bigint,
             lat: bigint,
             long: bigint,
             sensorId: bigint,
             dataAbertura: bigint,
-            event: ContractEventPayload
+            evento: ContractEventPayload
         ) => void
     ): this;
 }

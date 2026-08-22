@@ -1,31 +1,31 @@
 import { ManutencaoBocaDeLoboContract } from './contrato.interface';
 
 async function auditarEstadoPorHash(
-    txHash: string,
-    contract: ManutencaoBocaDeLoboContract
+    hashTransacao: string,
+    contrato: ManutencaoBocaDeLoboContract
 ) {
-    const provider = contract.runner!.provider!;
+    const provedor = contrato.runner!.provider!;
 
-    const receipt = await provider.getTransactionReceipt(txHash);
+    const recibo = await provedor.getTransactionReceipt(hashTransacao);
 
-    if (!receipt) {
-        throw new Error(`Recibo da transação ${txHash} não encontrado.`);
+    if (!recibo) {
+        throw new Error(`Recibo da transação ${hashTransacao} não encontrado.`);
     }
 
-    const logs = receipt.logs;
+    const logs = recibo.logs;
 
     if (!logs.length) {
         console.log('Nenhum log encontrado nesta transação.');
         return null;
     }
 
-    const parsedLog = contract.interface.parseLog(logs[0]);
+    const logDecodificado = contrato.interface.parseLog(logs[0]);
     let id: bigint | null = null;
 
-    parsedLog?.fragment.inputs.forEach((input, idx) => {
-        const name = input.name || `arg${idx}`;
-        if (name.toLowerCase() === 'id') {
-            id = parsedLog.args[idx];
+    logDecodificado?.fragment.inputs.forEach((entrada, indice) => {
+        const nome = entrada.name || `arg${indice}`;
+        if (nome.toLowerCase() === 'id') {
+            id = logDecodificado.args[indice];
         }
     });
 
@@ -33,8 +33,8 @@ async function auditarEstadoPorHash(
         throw new Error('ID do chamado nao encontrado.');
     }
 
-    const chamado = await contract.chamados(id, {
-        blockTag: receipt.blockNumber!,
+    const chamado = await contrato.chamados(id, {
+        blockTag: recibo.blockNumber!,
     });
     return chamado;
 }

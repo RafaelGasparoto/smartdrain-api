@@ -3,22 +3,22 @@ import { BROKER_URL, TOPICO } from './broker.constant';
 import { sensorService } from './sensor.service';
 
 export function iniciarBroker() {
-    const client = mqtt.connect(BROKER_URL);
+    const cliente = mqtt.connect(BROKER_URL);
 
-    client.on('connect', () => {
-        client.subscribe(TOPICO, (err) => {
-            if (err) {
-                console.error('Erro ao se inscrever no tópico:', err);
+    cliente.on('connect', () => {
+        cliente.subscribe(TOPICO, (erro) => {
+            if (erro) {
+                console.error('Erro ao se inscrever no tópico:', erro);
             }
         });
     });
 
-    client.on('message', (topico, message) => {
+    cliente.on('message', (topico, mensagem) => {
         if (topico === TOPICO) {
-            const sensorId = parseInt(message.toString());
-            sensorService.getSensor(sensorId)?.atualizarSinal();
+            const sensorId = parseInt(mensagem.toString());
+            sensorService.obterSensor(sensorId)?.atualizarSinal();
         }
     });
 
-    return client;
+    return cliente;
 }

@@ -3,13 +3,13 @@ import { sensorService } from './sensor.service';
 import { ManutencaoBocaDeLoboContract } from '../contrato/contrato.interface';
 import { SensorStatus } from './sensor.enum';
 import { Status } from '../chamado/chamado.enum';
-import { Sensor } from './sensor.model';
+import { Sensor } from './sensor.modelo';
 import { contratoService } from '../contrato/contrato.service';
 
 class SinalMonitor {
     private manutencaoContrato: ManutencaoBocaDeLoboContract | null = null;
-    private monitoringIntervalId: NodeJS.Timeout | null = null;
-    private readonly checkIntervalMs = 10000;
+    private idIntervaloVerificacao: NodeJS.Timeout | null = null;
+    private readonly intervaloVerificacaoMs = 10000;
     private verificando = false;
 
     constructor() {}
@@ -17,21 +17,21 @@ class SinalMonitor {
     public async iniciar(): Promise<void> {
         this.parar();
 
-        this.manutencaoContrato = await contratoService.getContrato();
+        this.manutencaoContrato = await contratoService.obterContrato();
 
         await this.sincronizarChamadosExistentes();
 
-        if (this.monitoringIntervalId) {
+        if (this.idIntervaloVerificacao) {
             return;
         }
 
-        this.monitoringIntervalId = setInterval(() => {
+        this.idIntervaloVerificacao = setInterval(() => {
             this.verificarSinal();
-        }, this.checkIntervalMs);
+        }, this.intervaloVerificacaoMs);
     }
 
     private async sincronizarChamadosExistentes(): Promise<void> {
-        for (const sensor of sensorService.getSensores()) {
+        for (const sensor of sensorService.obterSensores()) {
             await this.sincronizarChamadoAtivo(sensor);
         }
     }
@@ -51,7 +51,7 @@ class SinalMonitor {
                 return;
             }
 
-            const chamado = await this.manutencaoContrato!.getChamado(
+            const chamado = await this.manutencaoContrato!.obterChamado(
                 ultimoEvento.args.id
             );
 
@@ -59,7 +59,7 @@ class SinalMonitor {
                 return;
             }
 
-            sensor.setIdChamado(Number(chamado.id));
+            sensor.definirIdChamado(Number(chamado.id));
             sensor.status =
                 Number(chamado.status) === Status.Aberto
                     ? SensorStatus.Obstruido
@@ -69,18 +69,18 @@ class SinalMonitor {
             console.log(
                 `Chamado #${chamado.id} já existente encontrado para o sensor ${sensor.id}, sincronizando estado.`
             );
-        } catch (error) {
+        } catch (erro) {
             console.error(
                 `Erro ao sincronizar chamado existente do sensor ${sensor.id}:`,
-                error
+                erro
             );
         }
     }
 
     private parar(): void {
-        if (this.monitoringIntervalId) {
-            clearInterval(this.monitoringIntervalId);
-            this.monitoringIntervalId = null;
+        if (this.idIntervaloVerificacao) {
+            clearInterval(this.idIntervaloVerificacao);
+            this.idIntervaloVerificacao = null;
         }
     }
 
@@ -92,10 +92,10 @@ class SinalMonitor {
         this.verificando = true;
 
         try {
-            const sensores = sensorService.getSensores();
+            const sensores = sensorService.obterSensores();
 
             for (const sensor of sensores) {
-                if (!sensor.verificarAtivo(this.checkIntervalMs)) {
+                if (!sensor.verificarAtivo(this.intervaloVerificacaoMs)) {
                     if (
                         sensor.status == SensorStatus.Obstruido &&
                         !sensor.idChamado
@@ -113,7 +113,7 @@ class SinalMonitor {
 
     private async abrirChamado(sensorId: number): Promise<void> {
         try {
-            const sensor = sensorService.getSensor(sensorId);
+            const sensor = sensorService.obterSensor(sensorId);
 
             if (!sensor) {
                 console.error(`Sensor ${sensorId} não encontrado`);
@@ -130,24 +130,24 @@ class SinalMonitor {
                 longContrato
             );
 
-            const receipt = await tx.wait();
+            const recibo = await tx.wait();
 
-            if (!receipt || !receipt.logs) {
+            if (!recibo || !recibo.logs) {
                 throw new Error('Transação sem logs');
             }
 
             let chamadoId: bigint | null = null;
 
-            for (const log of receipt.logs) {
-                const parsedLog =
+            for (const log of recibo.logs) {
+                const logDecodificado =
                     this.manutencaoContrato!.interface.parseLog(log);
 
-                if (!parsedLog) {
+                if (!logDecodificado) {
                     continue;
                 }
 
-                if (parsedLog.name === 'NovoChamado') {
-                    chamadoId = parsedLog.args[0];
+                if (logDecodificado.name === 'NovoChamado') {
+                    chamadoId = logDecodificado.args[0];
                     break;
                 }
             }
@@ -156,15 +156,15 @@ class SinalMonitor {
                 throw new Error('ID do chamado não encontrado nos logs');
             }
 
-            sensor.setIdChamado(Number(chamadoId));
+            sensor.definirIdChamado(Number(chamadoId));
 
             console.log(
                 `Chamado #${chamadoId} aberto para o sensor ${sensorId}`
             );
-        } catch (error) {
+        } catch (erro) {
             console.error(
                 `Erro ao abrir chamado automático para sensor ${sensorId}:`,
-                error
+                erro
             );
         }
     }
@@ -174,12 +174,12 @@ class SinalMonitor {
             return;
         }
 
-        if (!sensor.verificarAtivo(this.checkIntervalMs)) {
+        if (!sensor.verificarAtivo(this.intervaloVerificacaoMs)) {
             return;
         }
 
         try {
-            const chamado = await this.manutencaoContrato!.getChamado(
+            const chamado = await this.manutencaoContrato!.obterChamado(
                 BigInt(sensor.idChamado)
             );
 
@@ -200,10 +200,10 @@ class SinalMonitor {
                         : `Chamado #${sensor.idChamado} finalizado após validação de manutenção.`
                 );
             }
-        } catch (error) {
+        } catch (erro) {
             console.error(
                 `Erro ao atualizar status do chamado #${sensor.idChamado!}:`,
-                error
+                erro
             );
         }
     }

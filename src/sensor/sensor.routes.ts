@@ -4,12 +4,12 @@ import { sensorService } from './sensor.service';
 export function registrarRotasSensor(app: express.Application) {
     app.get('/sensores', (req, res) => {
         try {
-            const sensores = sensorService.getSensores();
-            res.json({ success: true, sensores });
-        } catch (error) {
+            const sensores = sensorService.obterSensores();
+            res.json({ sucesso: true, sensores });
+        } catch (erro) {
             res.status(500).json({
-                success: false,
-                error: 'Erro ao obter sensores',
+                sucesso: false,
+                erro: 'Erro ao obter sensores',
             });
         }
     });

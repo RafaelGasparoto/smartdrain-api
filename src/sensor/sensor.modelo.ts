@@ -49,7 +49,7 @@ export class Sensor {
         return Date.now() - this.ultimoSinal;
     }
 
-    public setIdChamado(idChamado?: number) {
+    public definirIdChamado(idChamado?: number) {
         this.idChamado = idChamado;
     }
 

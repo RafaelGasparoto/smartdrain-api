@@ -1,5 +1,5 @@
 import { SensorStatus } from './sensor.enum';
-import { Sensor } from './sensor.model';
+import { Sensor } from './sensor.modelo';
 
 class SensorService {
     private sensores: Sensor[];
@@ -10,11 +10,11 @@ class SensorService {
         ];
     }
 
-    getSensores() {
+    obterSensores() {
         return this.sensores;
     }
 
-    getSensor(id: number) {
+    obterSensor(id: number) {
         return this.sensores.find((s) => s.id === id);
     }
 }

@@ -2,17 +2,17 @@ import { ManutencaoBocaDeLoboContract } from './contrato.interface';
 import { contratoService } from './contrato.service';
 import { sensorService } from '../sensor/sensor.service';
 import { SensorStatus } from '../sensor/sensor.enum';
-import { gravarHashTransacao } from '../chamado/transaction-log.service';
+import { gravarHashTransacao } from '../chamado/log-transacoes.service';
 
-class EventosListener {
+class OuvinteDeEventos {
     private contrato: ManutencaoBocaDeLoboContract | null = null;
 
     async escutarEventos() {
-        this.contrato = await contratoService.getContrato();
+        this.contrato = await contratoService.obterContrato();
 
         this.contrato.on(
             'NovoChamado',
-            async (id, lat, long, sensorId, dataAbertura, event) => {
+            async (id, lat, long, sensorId, dataAbertura, evento) => {
                 const latExibicao = Number(lat) / 1000000;
                 const longExibicao = Number(long) / 1000000;
 
@@ -25,7 +25,7 @@ class EventosListener {
                 console.log('-----------------------------');
 
                 await gravarHashTransacao(
-                    event.log.transactionHash,
+                    evento.log.transactionHash,
                     'NovoChamado',
                     Number(dataAbertura),
                     Number(id)
@@ -35,7 +35,7 @@ class EventosListener {
 
         this.contrato.on(
             'ChamadoEmAndamento',
-            async (id, tecnico, dataAtualizacao, event) => {
+            async (id, tecnico, dataAtualizacao, evento) => {
                 console.log('-----------------------------');
                 console.log(
                     `--- CHAMADO #${id} EM ANDAMENTO ${new Date(
@@ -46,7 +46,7 @@ class EventosListener {
                 console.log('-----------------------------');
 
                 await gravarHashTransacao(
-                    event.log.transactionHash,
+                    evento.log.transactionHash,
                     'ChamadoEmAndamento',
                     Number(dataAtualizacao),
                     Number(id)
@@ -56,7 +56,7 @@ class EventosListener {
 
         this.contrato.on(
             'ChamadoValidarManutencao',
-            async (id, tecnico, dataAtualizacao, event) => {
+            async (id, tecnico, dataAtualizacao, evento) => {
                 console.log('-----------------------------');
                 console.log(
                     `--- CHAMADO #${id} PARA VALIDAR MANUTENÇÃO ${new Date(Number(dataAtualizacao) * 1000)} ---`
@@ -65,7 +65,7 @@ class EventosListener {
                 console.log('-----------------------------');
 
                 await gravarHashTransacao(
-                    event.log.transactionHash,
+                    evento.log.transactionHash,
                     'ChamadoValidarManutencao',
                     Number(dataAtualizacao),
                     Number(id)
@@ -75,7 +75,7 @@ class EventosListener {
 
         this.contrato.on(
             'ChamadoFinalizado',
-            async (id, dataAtualizacao, event) => {
+            async (id, dataAtualizacao, evento) => {
                 console.log('-----------------------------');
                 console.log(
                     `--- CHAMADO #${id} FINALIZADO ${new Date(Number(dataAtualizacao) * 1000)} ---`
@@ -83,11 +83,11 @@ class EventosListener {
                 console.log('-----------------------------');
 
                 const sensor = sensorService
-                    .getSensores()
+                    .obterSensores()
                     .find((s) => s.idChamado === Number(id));
 
                 if (sensor) {
-                    sensor.setIdChamado(undefined);
+                    sensor.definirIdChamado(undefined);
                     sensor.status = SensorStatus.Normalizado;
                     console.log(
                         `Sensor ${sensor.id} atualizado para Normalizado.`
@@ -95,7 +95,7 @@ class EventosListener {
                 }
 
                 await gravarHashTransacao(
-                    event.log.transactionHash,
+                    evento.log.transactionHash,
                     'ChamadoFinalizado',
                     Number(dataAtualizacao),
                     Number(id)
@@ -105,4 +105,4 @@ class EventosListener {
     }
 }
 
-export const eventosListener = new EventosListener();
+export const ouvinteDeEventos = new OuvinteDeEventos();

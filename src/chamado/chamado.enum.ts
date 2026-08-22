@@ -5,7 +5,7 @@ export enum Status {
     Concluido = 3,
 }
 
-export function statusToString(status: Status): string {
+export function statusParaTexto(status: Status): string {
     switch (status) {
         case Status.Aberto:
             return 'Aberto';
