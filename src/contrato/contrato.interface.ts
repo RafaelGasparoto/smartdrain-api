@@ -31,6 +31,7 @@ interface ManutencaoBocaDeLoboFunctions {
         event: 'ChamadoEmAndamento',
         listener: (
             id: bigint,
+            tecnico: string,
             dataAtualizacao: bigint,
             event: ContractEventPayload
         ) => void
@@ -40,6 +41,7 @@ interface ManutencaoBocaDeLoboFunctions {
         event: 'ChamadoValidarManutencao',
         listener: (
             id: bigint,
+            tecnico: string,
             dataAtualizacao: bigint,
             event: ContractEventPayload
         ) => void

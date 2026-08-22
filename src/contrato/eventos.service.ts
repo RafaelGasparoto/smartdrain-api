@@ -35,13 +35,14 @@ class EventosListener {
 
         this.contrato.on(
             'ChamadoEmAndamento',
-            async (id, dataAtualizacao, event) => {
+            async (id, tecnico, dataAtualizacao, event) => {
                 console.log('-----------------------------');
                 console.log(
                     `--- CHAMADO #${id} EM ANDAMENTO ${new Date(
                         Number(dataAtualizacao) * 1000
                     )}---`
                 );
+                console.log(`Técnico: ${tecnico}`);
                 console.log('-----------------------------');
 
                 await gravarHashTransacao(
@@ -55,11 +56,12 @@ class EventosListener {
 
         this.contrato.on(
             'ChamadoValidarManutencao',
-            async (id, dataAtualizacao, event) => {
+            async (id, tecnico, dataAtualizacao, event) => {
                 console.log('-----------------------------');
                 console.log(
                     `--- CHAMADO #${id} PARA VALIDAR MANUTENÇÃO ${new Date(Number(dataAtualizacao) * 1000)} ---`
                 );
+                console.log(`Técnico: ${tecnico}`);
                 console.log('-----------------------------');
 
                 await gravarHashTransacao(

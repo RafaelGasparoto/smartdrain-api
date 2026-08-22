@@ -1,4 +1,5 @@
 import express from 'express';
+import { ethers } from 'ethers';
 import { sensorService } from '../sensor/sensor.service';
 import { auditarEstadoPorHash } from '../contrato/auditoria.service';
 import { lerLogTransacoes } from './transaction-log.service';
@@ -6,6 +7,7 @@ import { Chamado } from './chamado.interface';
 import { SensorStatus } from '../sensor/sensor.enum';
 import { Status, statusToString } from './chamado.enum';
 import { contratoService } from '../contrato/contrato.service';
+import { ManutencaoBocaDeLoboContract } from '../contrato/contrato.interface';
 
 export async function registrarRotasChamado(app: express.Application) {
     const contrato = await contratoService.getContrato();
@@ -82,6 +84,17 @@ export async function registrarRotasChamado(app: express.Application) {
     app.post('/chamados/:id/em-andamento', async (req, res) => {
         try {
             const id = parseInt(req.params.id);
+            const { chavePrivada } = req.body;
+
+            const tecnico = conectarComoTecnico(contrato, chavePrivada);
+
+            if (!tecnico) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'chavePrivada do técnico é obrigatória e deve ser válida',
+                });
+            }
+
             const chamado = await contrato.getChamado(BigInt(id));
 
             if (!chamado) {
@@ -98,7 +111,7 @@ export async function registrarRotasChamado(app: express.Application) {
                 });
             }
 
-            await contrato.iniciarAtendimento(BigInt(id));
+            await tecnico.contrato.iniciarAtendimento(BigInt(id));
 
             const sensor = sensorService
                 .getSensores()
@@ -108,11 +121,18 @@ export async function registrarRotasChamado(app: express.Application) {
                 sensor.status = SensorStatus.EmAndamento;
             }
 
-            res.json({ success: true, message: 'Chamado em andamento' });
+            res.json({
+                success: true,
+                message: 'Chamado em andamento',
+                tecnico: tecnico.endereco,
+            });
         } catch (error) {
             res.status(500).json({
                 success: false,
-                error: 'Erro ao colocar chamado em andamento',
+                error:
+                    error instanceof Error
+                        ? error.message
+                        : 'Erro ao colocar chamado em andamento',
             });
         }
     });
@@ -120,6 +140,17 @@ export async function registrarRotasChamado(app: express.Application) {
     app.post('/chamados/:id/validar-manutencao', async (req, res) => {
         try {
             const id = parseInt(req.params.id);
+            const { chavePrivada } = req.body;
+
+            const tecnico = conectarComoTecnico(contrato, chavePrivada);
+
+            if (!tecnico) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'chavePrivada do técnico é obrigatória e deve ser válida',
+                });
+            }
+
             const chamado = await contrato.getChamado(BigInt(id));
 
             if (!chamado) {
@@ -136,7 +167,7 @@ export async function registrarRotasChamado(app: express.Application) {
                 });
             }
 
-            await contrato.validarManutencao(BigInt(id));
+            await tecnico.contrato.validarManutencao(BigInt(id));
 
             res.json({
                 success: true,
@@ -145,10 +176,33 @@ export async function registrarRotasChamado(app: express.Application) {
         } catch (error) {
             res.status(500).json({
                 success: false,
-                error: 'Erro ao atualizar chamado para validar manutenção',
+                error:
+                    error instanceof Error
+                        ? error.message
+                        : 'Erro ao atualizar chamado para validar manutenção',
             });
         }
     });
+}
+
+function conectarComoTecnico(
+    contrato: ManutencaoBocaDeLoboContract,
+    chavePrivada: unknown
+): { contrato: ManutencaoBocaDeLoboContract; endereco: string } | null {
+    if (typeof chavePrivada !== 'string' || !chavePrivada) {
+        return null;
+    }
+
+    try {
+        const provider = contrato.runner!.provider!;
+        const tecnico = new ethers.Wallet(chavePrivada, provider);
+        return {
+            contrato: contrato.connect(tecnico) as ManutencaoBocaDeLoboContract,
+            endereco: tecnico.address,
+        };
+    } catch {
+        return null;
+    }
 }
 
 function convertChamadoToResponse(chamado: Chamado) {
@@ -162,6 +216,8 @@ function convertChamadoToResponse(chamado: Chamado) {
         lat: Number(chamado.lat) / 1000000,
         long: Number(chamado.long) / 1000000,
         status: statusToString(Number(chamado.status)),
+        tecnico:
+            chamado.tecnico === ethers.ZeroAddress ? null : chamado.tecnico,
         dataAbertura: Number(chamado.dataAbertura) * 1000,
         dataAtualizacao: Number(chamado.dataAtualizacao) * 1000,
         dataFechamento: Number(chamado.dataFechamento) * 1000,
