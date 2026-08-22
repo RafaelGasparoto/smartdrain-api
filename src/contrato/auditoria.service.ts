@@ -1,17 +1,10 @@
-import { ethers } from 'ethers';
-import { config } from 'dotenv';
-import process = require('process');
-import { ManutencaoBocaDeLoboContract } from '../interfaces/contrato.interface';
-
-config();
+import { ManutencaoBocaDeLoboContract } from './contrato.interface';
 
 async function auditarEstadoPorHash(
     txHash: string,
     contract: ManutencaoBocaDeLoboContract
 ) {
-    const provider = new ethers.WebSocketProvider(
-        process.env.WEB_SOCKET_PROVIDER_URL!
-    );
+    const provider = contract.runner!.provider!;
 
     const receipt = await provider.getTransactionReceipt(txHash);
 

@@ -1,12 +1,9 @@
 import { readFileSync } from 'fs';
 import { ethers } from 'ethers';
-import { config } from 'dotenv';
-import { ManutencaoBocaDeLoboContract } from '../interfaces/contrato.interface';
-import process = require('process');
+import { env } from '../config/env';
+import { ManutencaoBocaDeLoboContract } from './contrato.interface';
 
-config();
-
-class ContractService {
+class ContratoService {
     private contract: ManutencaoBocaDeLoboContract | null = null;
 
     async getContrato(): Promise<ManutencaoBocaDeLoboContract> {
@@ -18,17 +15,15 @@ class ContractService {
 
     private async setupContract(): Promise<ManutencaoBocaDeLoboContract> {
         const deployedAddresses = JSON.parse(
-            readFileSync(process.env.DEPLOYMENT_PATH!, 'utf8')
+            readFileSync(env.deploymentPath, 'utf8')
         );
-        const contractAddress = deployedAddresses[process.env.ARTIFACT_NAME!];
+        const contractAddress = deployedAddresses[env.artifactName];
 
-        const artifact = JSON.parse(
-            readFileSync(process.env.ARTIFACTS_PATH!, 'utf8')
-        );
+        const artifact = JSON.parse(readFileSync(env.artifactsPath, 'utf8'));
         const abi = artifact.abi;
 
         const provider = new ethers.WebSocketProvider(
-            process.env.WEB_SOCKET_PROVIDER_URL!
+            env.webSocketProviderUrl
         );
 
         const contratoConector = new ethers.Contract(
@@ -39,8 +34,7 @@ class ContractService {
 
         console.log(`Conectado ao contrato em: ${contractAddress}`);
 
-        const privateKey = process.env.PRIVATE_KEY!;
-        const wallet = new ethers.Wallet(privateKey, provider);
+        const wallet = new ethers.Wallet(env.privateKey, provider);
 
         const contrato = contratoConector.connect(
             wallet
@@ -50,4 +44,4 @@ class ContractService {
     }
 }
 
-export const contratoService = new ContractService();
+export const contratoService = new ContratoService();

@@ -4,7 +4,7 @@ import {
     ContractEventPayload,
     ContractTransactionResponse,
 } from 'ethers';
-import { Chamado } from './chamado.interface';
+import { Chamado } from '../chamado/chamado.interface';
 
 interface ManutencaoBocaDeLoboFunctions {
     chamados(id: BigNumberish, overrides?: any): Promise<Chamado>;

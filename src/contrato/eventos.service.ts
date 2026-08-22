@@ -1,7 +1,7 @@
-import { ManutencaoBocaDeLoboContract } from '../interfaces/contrato.interface';
-import { contratoService } from './contrato-setup.service';
-import { sensorService } from './sensor.service';
-import { gravarHashTransacao } from './transaction-log.service';
+import { ManutencaoBocaDeLoboContract } from './contrato.interface';
+import { contratoService } from './contrato.service';
+import { sensorService } from '../sensor/sensor.service';
+import { gravarHashTransacao } from '../chamado/transaction-log.service';
 
 class EventosListener {
     private contrato: ManutencaoBocaDeLoboContract | null = null;

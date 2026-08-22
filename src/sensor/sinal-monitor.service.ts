@@ -1,10 +1,10 @@
 import { EventLog } from 'ethers';
 import { sensorService } from './sensor.service';
-import { ManutencaoBocaDeLoboContract } from '../interfaces/contrato.interface';
-import { SensorStatus } from '../enum/status-sensor.enum';
-import { Status } from '../enum/status-chamado.enum';
-import { Sensor } from '../models/sensor';
-import { contratoService } from './contrato-setup.service';
+import { ManutencaoBocaDeLoboContract } from '../contrato/contrato.interface';
+import { SensorStatus } from './sensor.enum';
+import { Status } from '../chamado/chamado.enum';
+import { Sensor } from './sensor.model';
+import { contratoService } from '../contrato/contrato.service';
 
 class SinalMonitor {
     private manutencaoContrato: ManutencaoBocaDeLoboContract | null = null;

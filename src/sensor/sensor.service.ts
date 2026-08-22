@@ -1,5 +1,5 @@
-import { SensorStatus } from '../enum/status-sensor.enum';
-import { Sensor } from '../models/sensor';
+import { SensorStatus } from './sensor.enum';
+import { Sensor } from './sensor.model';
 
 class SensorService {
     private sensores: Sensor[];

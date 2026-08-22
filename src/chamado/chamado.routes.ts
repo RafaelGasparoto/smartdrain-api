@@ -1,16 +1,13 @@
 import express from 'express';
-import { sensorService } from '../services/sensor.service';
-import { auditarEstadoPorHash } from '../services/auditaria.service';
-import {
-    gravarHashTransacao,
-    lerLogTransacoes,
-} from '../services/transaction-log.service';
-import { Chamado } from '../interfaces/chamado.interface';
-import { SensorStatus } from '../enum/status-sensor.enum';
-import { Status, statusToString } from '../enum/status-chamado.enum';
-import { contratoService } from '../services/contrato-setup.service';
+import { sensorService } from '../sensor/sensor.service';
+import { auditarEstadoPorHash } from '../contrato/auditoria.service';
+import { lerLogTransacoes } from './transaction-log.service';
+import { Chamado } from './chamado.interface';
+import { SensorStatus } from '../sensor/sensor.enum';
+import { Status, statusToString } from './chamado.enum';
+import { contratoService } from '../contrato/contrato.service';
 
-export async function inicializarRotas(app: express.Application) {
+export async function registrarRotasChamado(app: express.Application) {
     const contrato = await contratoService.getContrato();
 
     app.get('/auditoria/:hash', async (req, res) => {
@@ -149,18 +146,6 @@ export async function inicializarRotas(app: express.Application) {
             res.status(500).json({
                 success: false,
                 error: 'Erro ao atualizar chamado para validar manutenção',
-            });
-        }
-    });
-
-    app.get('/sensores', (req, res) => {
-        try {
-            const sensores = sensorService.getSensores();
-            res.json({ success: true, sensores });
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                error: 'Erro ao obter sensores',
             });
         }
     });

@@ -1,9 +1,10 @@
-import { inicializarRotas } from './routes/contract.routes';
 import express from 'express';
 import cors from 'cors';
-import { iniciarBroker } from './mqtt/broker';
-import { eventosListener } from './services/escutar-eventos.service';
-import { sinalMonitor } from './services/sinal-monitor.service';
+import { iniciarBroker } from './sensor/broker';
+import { eventosListener } from './contrato/eventos.service';
+import { sinalMonitor } from './sensor/sinal-monitor.service';
+import { registrarRotasChamado } from './chamado/chamado.routes';
+import { registrarRotasSensor } from './sensor/sensor.routes';
 const app = express();
 
 app.use(cors({ origin: '*' }), express.json());
@@ -12,7 +13,8 @@ export async function bootstrap() {
     try {
         await sinalMonitor.iniciar();
         await eventosListener.escutarEventos();
-        await inicializarRotas(app);
+        await registrarRotasChamado(app);
+        registrarRotasSensor(app);
 
         const port = 3000;
 

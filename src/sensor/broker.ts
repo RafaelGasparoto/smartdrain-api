@@ -1,6 +1,6 @@
 import * as mqtt from 'mqtt';
 import { BROKER_URL, TOPICO } from './broker.constant';
-import { sensorService } from '../services/sensor.service';
+import { sensorService } from './sensor.service';
 
 export function iniciarBroker() {
     const client = mqtt.connect(BROKER_URL);

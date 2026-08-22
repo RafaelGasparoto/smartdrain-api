@@ -1,4 +1,4 @@
-import { SensorStatus } from '../enum/status-sensor.enum';
+import { SensorStatus } from './sensor.enum';
 
 export class Sensor {
     id: number;
