@@ -10,6 +10,7 @@ class SinalMonitor {
     private manutencaoContrato: ManutencaoBocaDeLoboContract | null = null;
     private monitoringIntervalId: NodeJS.Timeout | null = null;
     private readonly checkIntervalMs = 10000;
+    private verificando = false;
 
     constructor() {}
 
@@ -84,19 +85,29 @@ class SinalMonitor {
     }
 
     private async verificarSinal(): Promise<void> {
-        const sensores = sensorService.getSensores();
+        if (this.verificando) {
+            return;
+        }
 
-        for (const sensor of sensores) {
-            if (!sensor.verificarAtivo(this.checkIntervalMs)) {
-                if (
-                    sensor.status == SensorStatus.Obstruido &&
-                    !sensor.idChamado
-                ) {
-                    await this.abrirChamado(sensor.id);
+        this.verificando = true;
+
+        try {
+            const sensores = sensorService.getSensores();
+
+            for (const sensor of sensores) {
+                if (!sensor.verificarAtivo(this.checkIntervalMs)) {
+                    if (
+                        sensor.status == SensorStatus.Obstruido &&
+                        !sensor.idChamado
+                    ) {
+                        await this.abrirChamado(sensor.id);
+                    }
+                } else if (sensor.idChamado) {
+                    await this.finalizarChamado(sensor);
                 }
-            } else if (sensor.idChamado) {
-                await this.finalizarChamado(sensor);
             }
+        } finally {
+            this.verificando = false;
         }
     }
 
@@ -172,12 +183,21 @@ class SinalMonitor {
                 BigInt(sensor.idChamado)
             );
 
+            const apenasQuedaDeSinal =
+                Number(chamado.status) === Status.Aberto;
+
             if (
-                Number(chamado.status) === Status.ValidarManutencao ||
-                Number(chamado.status) === Status.Aberto
+                apenasQuedaDeSinal ||
+                Number(chamado.status) === Status.ValidarManutencao
             ) {
                 await this.manutencaoContrato!.finalizarChamado(
                     BigInt(sensor.idChamado)
+                );
+
+                console.log(
+                    apenasQuedaDeSinal
+                        ? `Chamado #${sensor.idChamado} finalizado automaticamente: sensor voltou a dar sinal sem intervenção de manutenção (provável queda de sinal).`
+                        : `Chamado #${sensor.idChamado} finalizado após validação de manutenção.`
                 );
             }
         } catch (error) {

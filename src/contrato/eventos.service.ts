@@ -1,6 +1,7 @@
 import { ManutencaoBocaDeLoboContract } from './contrato.interface';
 import { contratoService } from './contrato.service';
 import { sensorService } from '../sensor/sensor.service';
+import { SensorStatus } from '../sensor/sensor.enum';
 import { gravarHashTransacao } from '../chamado/transaction-log.service';
 
 class EventosListener {
@@ -85,6 +86,7 @@ class EventosListener {
 
                 if (sensor) {
                     sensor.setIdChamado(undefined);
+                    sensor.status = SensorStatus.Normalizado;
                     console.log(
                         `Sensor ${sensor.id} atualizado para Normalizado.`
                     );
