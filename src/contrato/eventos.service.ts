@@ -74,6 +74,27 @@ class OuvinteDeEventos {
         );
 
         this.contrato.on(
+            'ChamadoReaberto',
+            async (id, dataAtualizacao, evento) => {
+                console.log('-----------------------------');
+                console.log(
+                    `--- CHAMADO #${id} VOLTOU PARA EM ANDAMENTO ${new Date(Number(dataAtualizacao) * 1000)} ---`
+                );
+                console.log(
+                    'Validação expirou sem o sensor confirmar sinal.'
+                );
+                console.log('-----------------------------');
+
+                await gravarHashTransacao(
+                    evento.log.transactionHash,
+                    'ChamadoReaberto',
+                    Number(dataAtualizacao),
+                    Number(id)
+                );
+            }
+        );
+
+        this.contrato.on(
             'ChamadoFinalizado',
             async (id, finalizadoSemIntervencao, dataFechamento, evento) => {
                 console.log('-----------------------------');

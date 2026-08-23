@@ -5,6 +5,7 @@ import { SensorStatus } from './sensor.enum';
 import { Status } from '../chamado/chamado.enum';
 import { Sensor } from './sensor.modelo';
 import { contratoService } from '../contrato/contrato.service';
+import { ambiente } from '../config/ambiente';
 
 class SinalMonitor {
     private manutencaoContrato: ManutencaoBocaDeLoboContract | null = null;
@@ -95,11 +96,14 @@ class SinalMonitor {
             const sensores = sensorService.obterSensores();
 
             for (const sensor of sensores) {
-                if (!sensor.verificarAtivo(this.intervaloVerificacaoMs)) {
-                    if (
-                        sensor.status == SensorStatus.Obstruido &&
-                        !sensor.idChamado
-                    ) {
+                const ativo = sensor.verificarAtivo(
+                    this.intervaloVerificacaoMs
+                );
+
+                if (!ativo) {
+                    if (sensor.idChamado) {
+                        await this.verificarExpiracaoValidacao(sensor);
+                    } else if (sensor.status == SensorStatus.Obstruido) {
                         await this.abrirChamado(sensor.id);
                     }
                 } else if (sensor.idChamado) {
@@ -164,6 +168,42 @@ class SinalMonitor {
         } catch (erro) {
             console.error(
                 `Erro ao abrir chamado automático para sensor ${sensorId}:`,
+                erro
+            );
+        }
+    }
+
+    private async verificarExpiracaoValidacao(sensor: Sensor): Promise<void> {
+        if (!sensor.idChamado) {
+            return;
+        }
+
+        try {
+            const chamado = await this.manutencaoContrato!.obterChamado(
+                BigInt(sensor.idChamado)
+            );
+
+            if (Number(chamado.status) !== Status.ValidarManutencao) {
+                return;
+            }
+
+            const tempoDesdeValidacaoMs =
+                Date.now() - Number(chamado.dataAtualizacao) * 1000;
+
+            if (tempoDesdeValidacaoMs < ambiente.tempoLimiteValidacaoMs) {
+                return;
+            }
+
+            await this.manutencaoContrato!.reabrirAtendimento(
+                BigInt(sensor.idChamado)
+            );
+
+            console.log(
+                `Chamado #${sensor.idChamado} voltou para em andamento: validação expirou sem o sensor confirmar sinal.`
+            );
+        } catch (erro) {
+            console.error(
+                `Erro ao verificar expiração de validação do chamado #${sensor.idChamado}:`,
                 erro
             );
         }

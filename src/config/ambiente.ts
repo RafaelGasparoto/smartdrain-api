@@ -12,10 +12,17 @@ function obrigatoria(nome: string): string {
     return valor;
 }
 
+function opcional(nome: string, padrao: string): string {
+    return process.env[nome] || padrao;
+}
+
 export const ambiente = {
     caminhoImplantacao: obrigatoria('DEPLOYMENT_PATH'),
     nomeArtefato: obrigatoria('ARTIFACT_NAME'),
     caminhoArtefatos: obrigatoria('ARTIFACTS_PATH'),
     urlProvedorWebSocket: obrigatoria('WEB_SOCKET_PROVIDER_URL'),
     chavePrivada: obrigatoria('PRIVATE_KEY'),
+    tempoLimiteValidacaoMs: Number(
+        opcional('TEMPO_LIMITE_VALIDACAO_MS', '60000')
+    ),
 };
