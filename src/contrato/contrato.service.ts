@@ -37,9 +37,10 @@ class ContratoService {
         console.log(`Conectado ao contrato em: ${enderecoContrato}`);
 
         const carteira = new ethers.Wallet(ambiente.chavePrivada, provedor);
+        const carteiraComNonceGerenciado = new ethers.NonceManager(carteira);
 
         const contrato = contratoConector.connect(
-            carteira
+            carteiraComNonceGerenciado
         ) as ManutencaoBocaDeLoboContract;
 
         return contrato;
