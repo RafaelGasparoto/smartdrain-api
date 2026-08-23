@@ -13,8 +13,14 @@ interface ManutencaoBocaDeLoboFunctions {
         lat: bigint,
         long: bigint
     ): Promise<ContractTransactionResponse>;
-    iniciarAtendimento(id: bigint): Promise<ContractTransactionResponse>;
-    validarManutencao(id: bigint): Promise<ContractTransactionResponse>;
+    iniciarAtendimento(
+        id: bigint,
+        overrides?: any
+    ): Promise<ContractTransactionResponse>;
+    validarManutencao(
+        id: bigint,
+        overrides?: any
+    ): Promise<ContractTransactionResponse>;
     obterChamado(id: BigNumberish): Promise<Chamado>;
     finalizarChamado(id: bigint): Promise<ContractTransactionResponse>;
     reabrirAtendimento(id: bigint): Promise<ContractTransactionResponse>;

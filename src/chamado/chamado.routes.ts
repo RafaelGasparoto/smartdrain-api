@@ -162,7 +162,8 @@ export async function registrarRotasChamado(app: express.Application) {
                 });
             }
 
-            await tecnico.contrato.iniciarAtendimento(BigInt(id));
+            const nonce = await obterNonceAtual(tecnico);
+            await tecnico.contrato.iniciarAtendimento(BigInt(id), { nonce });
 
             const sensor = sensorService
                 .obterSensores()
@@ -218,7 +219,8 @@ export async function registrarRotasChamado(app: express.Application) {
                 });
             }
 
-            await tecnico.contrato.validarManutencao(BigInt(id));
+            const nonce = await obterNonceAtual(tecnico);
+            await tecnico.contrato.validarManutencao(BigInt(id), { nonce });
 
             res.json({
                 sucesso: true,
@@ -254,6 +256,14 @@ function conectarComoTecnico(
     } catch {
         return null;
     }
+}
+
+async function obterNonceAtual(tecnico: {
+    contrato: ManutencaoBocaDeLoboContract;
+    endereco: string;
+}): Promise<number> {
+    const provedor = tecnico.contrato.runner!.provider!;
+    return provedor.getTransactionCount(tecnico.endereco, 'latest');
 }
 
 function converterChamadoParaResposta(chamado: Chamado) {
