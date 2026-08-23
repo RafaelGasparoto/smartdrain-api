@@ -56,6 +56,57 @@ export async function registrarRotasChamado(app: express.Application) {
         }
     });
 
+    app.get('/chamados-completos', async (req, res) => {
+        try {
+            const eventos = await lerLogTransacoes();
+            const ids = [
+                ...new Set(
+                    eventos
+                        .filter((e) => e.evento === 'NovoChamado')
+                        .map((e) => e.id)
+                ),
+            ];
+
+            const chamados = await Promise.all(
+                ids.map(async (id) => {
+                    try {
+                        const chamado = await contrato.obterChamado(
+                            BigInt(id)
+                        );
+                        return converterChamadoParaResposta(chamado);
+                    } catch {
+                        return null;
+                    }
+                })
+            );
+
+            res.json({
+                sucesso: true,
+                chamados: chamados.filter((chamado) => chamado !== null),
+            });
+        } catch (erro) {
+            res.status(500).json({
+                sucesso: false,
+                erro: 'Erro ao obter chamados completos',
+            });
+        }
+    });
+
+    app.get('/chamados/:id/historico', async (req, res) => {
+        try {
+            const id = parseInt(req.params.id);
+            const eventos = await lerLogTransacoes();
+            const historico = eventos.filter((e) => e.id === id);
+
+            res.json({ sucesso: true, historico });
+        } catch (erro) {
+            res.status(500).json({
+                sucesso: false,
+                erro: 'Erro ao obter histórico do chamado',
+            });
+        }
+    });
+
     app.get('/chamados/:id', async (req, res) => {
         try {
             const id = parseInt(req.params.id);
