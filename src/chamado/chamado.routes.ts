@@ -257,10 +257,6 @@ function conectarComoTecnico(
 }
 
 function converterChamadoParaResposta(chamado: Chamado) {
-    const finalizadoSemIntervencao =
-        Number(chamado.status) === Status.Concluido &&
-        Number(chamado.dataAtualizacao) === 0;
-
     return {
         id: Number(chamado.id),
         sensorId: Number(chamado.sensorId),
@@ -272,6 +268,6 @@ function converterChamadoParaResposta(chamado: Chamado) {
         dataAbertura: Number(chamado.dataAbertura) * 1000,
         dataAtualizacao: Number(chamado.dataAtualizacao) * 1000,
         dataFechamento: Number(chamado.dataFechamento) * 1000,
-        finalizadoSemIntervencao,
+        finalizadoSemIntervencao: chamado.finalizadoSemIntervencao,
     };
 }

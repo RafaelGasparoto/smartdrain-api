@@ -5,6 +5,7 @@ export interface Chamado {
     sensorId: bigint;
     status: bigint;
     tecnico: string;
+    finalizadoSemIntervencao: boolean;
     dataAbertura: bigint;
     dataAtualizacao: bigint;
     dataFechamento: bigint;

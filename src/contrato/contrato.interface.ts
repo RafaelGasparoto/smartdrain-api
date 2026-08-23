@@ -22,6 +22,7 @@ interface ManutencaoBocaDeLoboFunctions {
         evento: 'ChamadoFinalizado',
         listener: (
             id: bigint,
+            finalizadoSemIntervencao: boolean,
             dataFechamento: bigint,
             evento: ContractEventPayload
         ) => void

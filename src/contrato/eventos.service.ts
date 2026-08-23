@@ -75,10 +75,15 @@ class OuvinteDeEventos {
 
         this.contrato.on(
             'ChamadoFinalizado',
-            async (id, dataAtualizacao, evento) => {
+            async (id, finalizadoSemIntervencao, dataFechamento, evento) => {
                 console.log('-----------------------------');
                 console.log(
-                    `--- CHAMADO #${id} FINALIZADO ${new Date(Number(dataAtualizacao) * 1000)} ---`
+                    `--- CHAMADO #${id} FINALIZADO ${new Date(Number(dataFechamento) * 1000)} ---`
+                );
+                console.log(
+                    finalizadoSemIntervencao
+                        ? 'Finalizado automaticamente, sem intervenção técnica (queda de sinal).'
+                        : 'Finalizado após validação de manutenção pelo técnico.'
                 );
                 console.log('-----------------------------');
 
@@ -96,8 +101,10 @@ class OuvinteDeEventos {
 
                 await gravarHashTransacao(
                     evento.log.transactionHash,
-                    'ChamadoFinalizado',
-                    Number(dataAtualizacao),
+                    finalizadoSemIntervencao
+                        ? 'ChamadoFinalizadoAutomaticamente'
+                        : 'ChamadoFinalizado',
+                    Number(dataFechamento),
                     Number(id)
                 );
             }
