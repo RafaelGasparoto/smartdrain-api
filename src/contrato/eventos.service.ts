@@ -2,7 +2,6 @@ import { ManutencaoBocaDeLoboContract } from './contrato.interface';
 import { contratoService } from './contrato.service';
 import { sensorService } from '../sensor/sensor.service';
 import { SensorStatus } from '../sensor/sensor.enum';
-import { gravarHashTransacao } from '../chamado/log-transacoes.service';
 
 class OuvinteDeEventos {
     private contrato: ManutencaoBocaDeLoboContract | null = null;
@@ -12,7 +11,7 @@ class OuvinteDeEventos {
 
         this.contrato.on(
             'NovoChamado',
-            async (id, lat, long, sensorId, dataAbertura, evento) => {
+            async (id, lat, long, sensorId, dataAbertura) => {
                 const latExibicao = Number(lat) / 1000000;
                 const longExibicao = Number(long) / 1000000;
 
@@ -23,19 +22,12 @@ class OuvinteDeEventos {
                 console.log(`Latitude: ${latExibicao}`);
                 console.log(`Longitude: ${longExibicao}`);
                 console.log('-----------------------------');
-
-                await gravarHashTransacao(
-                    evento.log.transactionHash,
-                    'NovoChamado',
-                    Number(dataAbertura),
-                    Number(id)
-                );
             }
         );
 
         this.contrato.on(
             'ChamadoEmAndamento',
-            async (id, tecnico, dataAtualizacao, evento) => {
+            async (id, tecnico, dataAtualizacao) => {
                 console.log('-----------------------------');
                 console.log(
                     `--- CHAMADO #${id} EM ANDAMENTO ${new Date(
@@ -44,38 +36,24 @@ class OuvinteDeEventos {
                 );
                 console.log(`Técnico: ${tecnico}`);
                 console.log('-----------------------------');
-
-                await gravarHashTransacao(
-                    evento.log.transactionHash,
-                    'ChamadoEmAndamento',
-                    Number(dataAtualizacao),
-                    Number(id)
-                );
             }
         );
 
         this.contrato.on(
             'ChamadoValidarManutencao',
-            async (id, tecnico, dataAtualizacao, evento) => {
+            async (id, tecnico, dataAtualizacao) => {
                 console.log('-----------------------------');
                 console.log(
                     `--- CHAMADO #${id} PARA VALIDAR MANUTENÇÃO ${new Date(Number(dataAtualizacao) * 1000)} ---`
                 );
                 console.log(`Técnico: ${tecnico}`);
                 console.log('-----------------------------');
-
-                await gravarHashTransacao(
-                    evento.log.transactionHash,
-                    'ChamadoValidarManutencao',
-                    Number(dataAtualizacao),
-                    Number(id)
-                );
             }
         );
 
         this.contrato.on(
             'ChamadoReaberto',
-            async (id, dataAtualizacao, evento) => {
+            async (id, dataAtualizacao) => {
                 console.log('-----------------------------');
                 console.log(
                     `--- CHAMADO #${id} VOLTOU PARA EM ANDAMENTO ${new Date(Number(dataAtualizacao) * 1000)} ---`
@@ -84,19 +62,12 @@ class OuvinteDeEventos {
                     'Validação expirou sem o sensor confirmar sinal.'
                 );
                 console.log('-----------------------------');
-
-                await gravarHashTransacao(
-                    evento.log.transactionHash,
-                    'ChamadoReaberto',
-                    Number(dataAtualizacao),
-                    Number(id)
-                );
             }
         );
 
         this.contrato.on(
             'ChamadoFinalizado',
-            async (id, finalizadoSemIntervencao, dataFechamento, evento) => {
+            async (id, finalizadoSemIntervencao, dataFechamento) => {
                 console.log('-----------------------------');
                 console.log(
                     `--- CHAMADO #${id} FINALIZADO ${new Date(Number(dataFechamento) * 1000)} ---`
@@ -119,15 +90,6 @@ class OuvinteDeEventos {
                         `Sensor ${sensor.id} atualizado para Normalizado.`
                     );
                 }
-
-                await gravarHashTransacao(
-                    evento.log.transactionHash,
-                    finalizadoSemIntervencao
-                        ? 'ChamadoFinalizadoAutomaticamente'
-                        : 'ChamadoFinalizado',
-                    Number(dataFechamento),
-                    Number(id)
-                );
             }
         );
     }

@@ -2,7 +2,10 @@ import express from 'express';
 import { ethers } from 'ethers';
 import { sensorService } from '../sensor/sensor.service';
 import { auditarEstadoPorHash } from '../contrato/auditoria.service';
-import { lerLogTransacoes } from './log-transacoes.service';
+import {
+    obterLinhaDoTempo,
+    obterLinhaDoTempoPorChamado,
+} from './linha-do-tempo.service';
 import { Chamado } from './chamado.interface';
 import { SensorStatus } from '../sensor/sensor.enum';
 import { Status, statusParaTexto } from './chamado.enum';
@@ -42,7 +45,7 @@ export async function registrarRotasChamado(app: express.Application) {
 
     app.get('/chamados', async (req, res) => {
         try {
-            const chamados = await lerLogTransacoes();
+            const chamados = await obterLinhaDoTempo(contrato);
 
             res.json({
                 sucesso: true,
@@ -58,7 +61,7 @@ export async function registrarRotasChamado(app: express.Application) {
 
     app.get('/chamados-completos', async (req, res) => {
         try {
-            const eventos = await lerLogTransacoes();
+            const eventos = await obterLinhaDoTempo(contrato);
             const ids = [
                 ...new Set(
                     eventos
@@ -95,8 +98,7 @@ export async function registrarRotasChamado(app: express.Application) {
     app.get('/chamados/:id/historico', async (req, res) => {
         try {
             const id = parseInt(req.params.id);
-            const eventos = await lerLogTransacoes();
-            const historico = eventos.filter((e) => e.id === id);
+            const historico = await obterLinhaDoTempoPorChamado(contrato, id);
 
             res.json({ sucesso: true, historico });
         } catch (erro) {
