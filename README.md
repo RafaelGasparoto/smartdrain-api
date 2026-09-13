@@ -10,13 +10,37 @@ Este repositório faz parte de um TCC sobre o uso de blockchain para automatizar
 - **smartdrain-api** (este repositório) — API que integra os sensores (MQTT) com a blockchain
 - [smartdrain-web](https://github.com/RafaelGasparoto/smartdrain-web) — dashboard e painel do técnico
 
-## Requisitos
+## Rodando tudo com Docker (mais rápido)
+
+O [`docker-compose.yml`](docker-compose.yml) fica neste repositório, na raiz. Baixe só esse arquivo e rode:
+
+```shell
+docker compose pull
+docker compose up
+```
+
+Requisito: Docker Desktop instalado e em execução.
+
+| Serviço | Endereço |
+| --- | --- |
+| Dashboard | http://localhost:8080 |
+| Painel do técnico | http://localhost:8080/tecnico.html |
+| Simulador de sensores | http://localhost:8080/simulador.html |
+| API (este repositório) | http://localhost:3000 |
+| Blockchain local (Hardhat) | `localhost:8545` |
+| Broker MQTT | `localhost:1883` (MQTT) / `localhost:9001` (WebSocket) |
+
+Pra derrubar: `Ctrl+C` e `docker compose down`.
+
+## Rodando sem Docker
+
+### Requisitos
 
 - Node.js
 - npm
 - Um nó local do `smartdrain-contract` rodando (`npm run start`) com o contrato deployado (`npm run deploy`)
 
-## Instalação
+### Instalação
 
 ```shell
 npm install
@@ -45,8 +69,10 @@ TECNICO_PRIVATE_KEY = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603
 | `PRIVATE_KEY` | Sim | Chave da carteira "dona" do contrato, usada pela própria API para abrir/finalizar/reabrir chamados (funções restritas por `apenasDono`). Em ambiente local, use uma das contas impressas pelo `npx hardhat node` (por padrão a Account #0). |
 | `TEMPO_LIMITE_VALIDACAO_MS` | Não (padrão `60000`) | Tempo, em ms, que o técnico tem para validar a manutenção antes do chamado voltar sozinho para "Em Andamento". |
 | `TECNICO_PRIVATE_KEY` | Não | Não é lida pelo código (não existe em `src/config/ambiente.ts`) — é só uma cópia de conveniência de uma conta de teste do Hardhat (Account #1), pra colar rápido ao testar os endpoints de técnico manualmente. O painel do técnico (`smartdrain-web/tecnico.js`) já usa essa mesma chave fixa. |
+| `BROKER_URL` | Não (padrão `mqtt://broker.hivemq.com`) | URL do broker MQTT que a API escuta (ver `src/sensor/broker.constant.ts`). No ambiente Docker (raiz do projeto, `docker-compose.yml`) é sobrescrita para `mqtt://mosquitto:1883`, apontando pro broker local. |
+| `TOPICO` | Não (padrão `sensor/sinal`) | Tópico MQTT usado para receber o sinal dos sensores. |
 
-## Uso
+### Uso
 
 ```shell
 npm run dev
