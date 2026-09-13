@@ -19,15 +19,19 @@ async function auditarEstadoPorHash(
         return null;
     }
 
-    const logDecodificado = contrato.interface.parseLog(logs[0]);
-    let id: bigint | null = null;
+    const logDoContrato = logs.filter(
+        (log) =>
+            log.address.toLowerCase() ===
+            contrato.target.toString().toLowerCase()
+    );
 
-    logDecodificado?.fragment.inputs.forEach((entrada, indice) => {
-        const nome = entrada.name || `arg${indice}`;
-        if (nome.toLowerCase() === 'id') {
-            id = logDecodificado.args[indice];
-        }
-    });
+    if (!logDoContrato.length) {
+        console.log('Nenhum log do contrato encontrado nesta transação.');
+        return null;
+    }
+
+    const logDecodificado = contrato.interface.parseLog(logDoContrato[0]);
+    const id: bigint | undefined = logDecodificado?.args.id;
 
     if (!id) {
         throw new Error('ID do chamado nao encontrado.');
