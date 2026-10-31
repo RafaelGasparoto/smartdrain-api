@@ -10,7 +10,6 @@ import { ambiente } from '../config/ambiente';
 class SinalMonitor {
     private manutencaoContrato: ManutencaoBocaDeLoboContract | null = null;
     private idIntervaloVerificacao: NodeJS.Timeout | null = null;
-    private readonly intervaloVerificacaoMs = 10000;
     private verificando = false;
 
     constructor() {}
@@ -28,7 +27,7 @@ class SinalMonitor {
 
         this.idIntervaloVerificacao = setInterval(() => {
             this.verificarSinal();
-        }, this.intervaloVerificacaoMs);
+        }, ambiente.intervaloVerificacaoSensorMs);
     }
 
     private async sincronizarChamadosExistentes(): Promise<void> {
@@ -97,7 +96,7 @@ class SinalMonitor {
 
             for (const sensor of sensores) {
                 const ativo = sensor.verificarAtivo(
-                    this.intervaloVerificacaoMs
+                    ambiente.tempoSensorInativoMs
                 );
 
                 if (!ativo) {
@@ -214,7 +213,7 @@ class SinalMonitor {
             return;
         }
 
-        if (!sensor.verificarAtivo(this.intervaloVerificacaoMs)) {
+        if (!sensor.verificarAtivo(ambiente.tempoSensorInativoMs)) {
             return;
         }
 
@@ -239,6 +238,8 @@ class SinalMonitor {
                         ? `Chamado #${sensor.idChamado} finalizado automaticamente: sensor voltou a dar sinal sem intervenção de manutenção (provável queda de sinal).`
                         : `Chamado #${sensor.idChamado} finalizado após validação de manutenção.`
                 );
+
+                sensor.definirIdChamado(undefined);
             }
         } catch (erro) {
             console.error(

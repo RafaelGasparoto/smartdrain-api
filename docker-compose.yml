@@ -37,6 +37,8 @@ services:
       WEB_SOCKET_PROVIDER_URL: "ws://hardhat-node:8545"
       PRIVATE_KEY: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
       TEMPO_LIMITE_VALIDACAO_MS: "60000"
+      TEMPO_SENSOR_INATIVO_MS: "10000"
+      INTERVALO_VERIFICACAO_SENSOR_MS: "15000"
       BROKER_URL: "mqtt://mosquitto:1883"
       TOPICO: "sensor/sinal"
     volumes:

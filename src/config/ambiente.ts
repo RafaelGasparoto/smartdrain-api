@@ -25,4 +25,10 @@ export const ambiente = {
     tempoLimiteValidacaoMs: Number(
         opcional('TEMPO_LIMITE_VALIDACAO_MS', '60000')
     ),
+    tempoSensorInativoMs: Number(
+        opcional('TEMPO_SENSOR_INATIVO_MS', '10000')
+    ),
+    intervaloVerificacaoSensorMs: Number(
+        opcional('INTERVALO_VERIFICACAO_SENSOR_MS', '10000')
+    ),
 };
