@@ -32,6 +32,24 @@ Requisito: Docker Desktop instalado e em execução.
 
 Pra derrubar: `Ctrl+C` e `docker compose down`.
 
+### Ajustando os tempos
+
+As variáveis de ambiente da API ficam no bloco `environment:` do serviço `api` no `docker-compose.yml`. As que controlam tempos podem ser alteradas livremente:
+
+| Variável | Valor no compose | Descrição |
+| --- | --- | --- |
+| `TEMPO_SENSOR_INATIVO_MS` | `10000` | Tempo sem sinal para o sensor ser considerado obstruído e abrir chamado |
+| `INTERVALO_VERIFICACAO_SENSOR_MS` | `15000` | De quanto em quanto tempo a API verifica o sinal dos sensores |
+| `TEMPO_LIMITE_VALIDACAO_MS` | `60000` | Tempo para a validação da manutenção expirar e o chamado voltar para "Em Andamento" |
+
+Depois de alterar, basta recriar o container (não precisa rebuildar a imagem):
+
+```shell
+docker compose up -d api
+```
+
+A descrição completa de todas as variáveis está em [Instalação](#instalação).
+
 ## Rodando sem Docker
 
 ### Requisitos
@@ -56,6 +74,8 @@ WEB_SOCKET_PROVIDER_URL = "ws://localhost:8545"
 PRIVATE_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
 
 TEMPO_LIMITE_VALIDACAO_MS = "60000"
+TEMPO_SENSOR_INATIVO_MS = "10000"
+INTERVALO_VERIFICACAO_SENSOR_MS = "15000"
 
 TECNICO_PRIVATE_KEY = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
 ```
@@ -68,6 +88,8 @@ TECNICO_PRIVATE_KEY = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603
 | `WEB_SOCKET_PROVIDER_URL` | Sim | Endpoint WebSocket do nó (`npm run start` no `smartdrain-contract` sobe um nó Hardhat local em `ws://localhost:8545`). |
 | `PRIVATE_KEY` | Sim | Chave da carteira "dona" do contrato, usada pela própria API para abrir/finalizar/reabrir chamados (funções restritas por `apenasDono`). Em ambiente local, use uma das contas impressas pelo `npx hardhat node` (por padrão a Account #0). |
 | `TEMPO_LIMITE_VALIDACAO_MS` | Não (padrão `60000`) | Tempo, em ms, que o técnico tem para validar a manutenção antes do chamado voltar sozinho para "Em Andamento". |
+| `TEMPO_SENSOR_INATIVO_MS` | Não (padrão `10000`) | Tempo, em ms, sem receber sinal para o sensor ser considerado inativo (obstruído) e abrir chamado. Deve ser maior que o intervalo de envio do sensor (o simulador envia a cada 4s). |
+| `INTERVALO_VERIFICACAO_SENSOR_MS` | Não (padrão `10000`) | De quanto em quanto tempo, em ms, a API verifica o sinal dos sensores. Somado ao `TEMPO_SENSOR_INATIVO_MS`, dá o tempo máximo até uma obstrução virar chamado. |
 | `TECNICO_PRIVATE_KEY` | Não | Não é lida pelo código (não existe em `src/config/ambiente.ts`) — é só uma cópia de conveniência de uma conta de teste do Hardhat (Account #1), pra colar rápido ao testar os endpoints de técnico manualmente. O painel do técnico (`smartdrain-web/tecnico.js`) já usa essa mesma chave fixa. |
 | `BROKER_URL` | Não (padrão `mqtt://broker.hivemq.com`) | URL do broker MQTT que a API escuta (ver `src/sensor/broker.constant.ts`). No ambiente Docker (raiz do projeto, `docker-compose.yml`) é sobrescrita para `mqtt://mosquitto:1883`, apontando pro broker local. |
 | `TOPICO` | Não (padrão `sensor/sinal`) | Tópico MQTT usado para receber o sinal dos sensores. |
